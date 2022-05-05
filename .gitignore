@@ -21,3 +21,4 @@ multiqc_report_alignment_test_data/multiqc_star.txt
 *.bed
 .DS_Store
 .Rhistory
+.DS_Store
