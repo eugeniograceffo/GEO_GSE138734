@@ -1,0 +1,401 @@
+---
+title: "THRA Isoform 1 and Isoform 2 Relative Expression"
+output:
+  html_document:
+    toc: True
+    toc_float: True
+    df_print: paged
+---
+INTRODUCTION to the Experiment
+
+	A total of 148 solid tissue samples representing 20 organs were taken from post-mortal human healthy donors killed in road accidents no later than 36 hours after death. Prior to RNA extraction solid normal tissue samples were stored either in RNAlater or as Formalin-Fixed Paraffin-Embedded (FFPE) blocks. Blood and bone marrow samples were taken from 6 and 11 healthy volunteers respectively and subjected immediately to RNA extraction. Following ribosomal RNA depletion and RNA libraries construction transcription profiles of the samples were obtained using Illumina HiSeq 3000.
+First-Stranded single-end reads. 50bp. Read counts of THRA exon 9a (Chr17:40089333) and exon 9b (Chr17:40089334)
+
+```{r}
+## #load libraries
+library("DESeq2")
+library(tidyverse)
+library(ggrepel)
+library(dplyr)
+library("plotly")
+
+
+
+```
+
+```{r}
+### Load gene(/transcript) count matrix and labels
+
+countData <- as.matrix(read.csv("gene_count_matrix.csv", row.names="gene_id"))
+colData <- read.delim("metadata_GEO_GSE120795.txt", sep=",",row.names="Run")
+
+colData
+
+### countData column names need to be edited. Only the Run number should be used as a name to match colData
+colnames(countData) = str_remove(colnames(countData), '_G.*')  ## the . is essential to disregard the next _ characters
+
+
+### Check all sample IDs in colData are also in CountData and match their orders
+all(rownames(colData) %in% colnames(countData))
+countData <- countData[, rownames(colData)]
+all(rownames(colData) == colnames(countData))
+
+```
+```{r}
+### Create a DESeqDataSet from count matrix and labels
+dds <- DESeqDataSetFromMatrix(countData = countData, 
+                                colData = colData, design =  ~ source_name)
+```
+```{r}
+###
+
+colData(dds)
+head( counts(dds), 5 )
+```
+```{r}
+### Principal component analysis to detect outliers in the replicates
+vsd <- vst(dds, blind=FALSE)
+sampleDists <- dist(t(assay(vsd)))
+
+pcaData <- plotPCA(vsd, intgroup=c("source_name"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+
+#plotPCA(vsd, intgroup=c("source_name"))
+
+x_max_PCA <- max(pcaData$PC1)
+x_min_PCA <- min(pcaData$PC1)
+y_max_PCA <- max(pcaData$PC2)
+y_min_PCA <- min(pcaData$PC2)
+
+
+### Plot one PCA containing all the samples
+
+ggplot(pcaData, aes(PC1, PC2, color=source_name)) +
+  geom_point(size=2.5) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed(xlim = c(x_min_PCA, x_max_PCA), ylim = c(y_min_PCA, y_max_PCA))+
+  theme_light(base_size = 12) 
+   # geom_encircle(data = pcaData[pcaData$source_name == "Kidney", ], aes(x=PC1, y=PC2), show.legend = TRUE)    # draw circles, needs library(ggalt) and library(ggfortify)
+  
+ggsave("PCA_total.png", width = 32, height = 20, units = "cm")
+ggplotly()
+
+
+
+### Plot all the samples in one big grid
+PCA_single <- ggplot(pcaData, aes(PC1, PC2, color=source_name)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed(xlim = c(x_min_PCA, x_max_PCA), ylim = c(y_min_PCA, y_max_PCA)) + 
+  theme(legend.position="none") +
+  theme_light(base_size = 12) +
+  geom_text_repel(aes(label =  name),
+                  box.padding   = 0.35, 
+                  point.padding = 0.5,
+                  segment.color = 'grey50',
+                  max.overlaps = 170,
+                  size=2)
+
+PCA_single + facet_wrap(~source_name) + theme(legend.position="none") 
+
+ggsave("PCA_single_samples.png", width = 32, height = 20, units = "cm")
+
+
+### Plot each sample in one single PCA plot
+
+for (sample in pcaData$source_name ) {
+
+  graph_title <- paste0("PCA_", sample, ".png")
+  
+  PCA_single %+% subset(pcaData, source_name %in% paste(sample))
+  
+  
+  ggsave(graph_title, width = 32, height = 20, units = "cm", path= "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE120795/PCA_single_outputs")
+  
+  
+  }
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#set the reference level
+dds$Condition <- relevel(dds$Condition, ref = "higher_THRA1")
+
+### run DESeq2 and calculate the results
+dds <- DESeq(dds)
+res <- results(dds)
+res
+
+```
+```{r}
+### Log fold change shrinkage for visualization and ranking
+resultsNames(dds)
+
+resLFC <- lfcShrink(dds, coef="Condition_lower_THRA1_vs_higher_THRA1", type="apeglm")
+resLFC
+```
+```{r}
+### p-values and adjusted p-values
+resOrdered <- res[order(res$padj), ]
+summary(res)
+
+```
+
+```{r}
+### How many adjusted p-values were less than 0.05?
+sum(res$padj < 0.05, na.rm=TRUE)
+```
+
+```{r}
+plotDispEsts( dds )
+
+plotMA(resLFC, ylim=c(-10,10), alpha= 0.05, main= "MA plot with alpha=0.05")
+
+```
+
+```{r}
+### plotting the genecounts
+plotCounts(dds, gene="ENSG00000126351.13|THRA", intgroup="Condition")
+
+```
+```{r}
+### exporting the results
+resSig <- subset(resOrdered, padj < 0.05)
+resSig
+
+write.csv(as.data.frame(resSig), 
+          file="Low_THRA1_vs_high_as_ref_results.csv")
+```
+
+```{r}
+library("pheatmap")
+select <- order(rowMeans(counts(dds,normalized=TRUE)),
+                decreasing=TRUE)[1:20]
+df <- as.data.frame(colData(dds)[,c("Condition", "Tissue")])
+ntd <- normTransform(dds)
+pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=df)
+```
+
+ 
+ Another use of the transformed data is sample clustering. Here, we apply the dist function to the transpose of the transformed count matrix to get sample-to-sample distances.
+ A heatmap of this distance matrix gives us an overview over similarities and dissimilarities between samples. We have to provide a hierarchical clustering hc to the heatmap function based on the sample distances, or else the heatmap function would calculate a clustering based on the distances between the rows/columns of the distance matrix.
+ 
+```{r}
+### clustering
+
+library("RColorBrewer")
+
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- paste(vsd$Condition, vsd$Tissue, sep="-")
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+heatmap <-pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors)
+
+heatmap
+ggsave( "Heatmap.pdf", width = 40, height = 25, units = "cm")
+
+```
+
+
+```{r}
+# make screeplot
+    ## calculate the variance for each gene
+     rv <- rowVars(assay(vsd))
+
+     ## select the ntop genes by variance
+     select <- order(rv, decreasing=TRUE)[seq_len(min(500, length(rv)))]
+     
+     ## perform a PCA on the data in assay(x) for the selected genes
+     pca <- prcomp(t(assay(vsd)[select,]))
+     
+     ## the contribution to the total variance for each component
+     percentVar <- pca$sdev^2 / sum( pca$sdev^2 )*100
+     
+     ##plot the "percentVar"
+     scree_plot=data.frame(percentVar)
+     scree_plot[,2]<- c(1:6)
+
+     colnames(scree_plot)<-c("variance","component_number")
+     ggplot(scree_plot, mapping=aes(x=component_number, y=variance))+geom_bar(stat="identity")+
+         ggtitle("Scree plot") +
+      theme(legend.position = "right", plot.title = element_text(hjust=0.5)) + 
+       ylab("% Variance")
+```
+ 
+ 
+```{r}
+### P-values distribution
+## P-value histogram plot
+res.df <- as.data.frame(res)
+
+## Sort results by adjusted p-values
+ord <- order(res.df$padj, decreasing = FALSE)
+res.df <- res.df[ord, ]
+res.df <- cbind(data.frame(Feature = rownames(res.df)), res.df)
+rownames(res.df) <- NULL
+
+## Adjusted p-values histogram plot
+ggplot(res.df[!is.na(res.df$padj), ], aes(x = padj)) +
+    geom_histogram(alpha=.5, position='identity', bins = 50) +
+    labs(title=paste('Histogram of', elementMetadata(res)$description[grep('adjusted', elementMetadata(res)$description)])) +
+    xlab('Adjusted p-values') +
+    xlim(c(0, 1.0005))
+```
+
+BiocManager::install("ReportingTools")
+citation("ReportingTools")
+https://bioconductor.org/packages/devel/bioc/vignettes/ReportingTools/inst/doc/rnaseqAnalysis.pdf
+
+```{r}
+library(ReportingTools)
+
+des2Report <- HTMLReport(shortName = 'RNAseq_analysis_with_DESeq2_P0.1',
+title = 'RNA-seq analysis of differential expression: Tissues expressing high vs low THRA1',
+reportDirectory = "./reports")
+
+publish(dds,des2Report, pvalueCutoff=0.1,
+annotation.db="org.Mm.eg.db", factor = colData(dds)$Condition,
+reportDir="./reports")
+finish(des2Report)
+
+
+```
+
+
+```{r}
+### get reference list for GO
+GO_reference_list <- dplyr::select(res.df, Count=baseMean,  GeneID= Feature, FDR="padj", Log2FoldChange="log2FoldChange" ) %>%
+   drop_na() %>%
+ #  separate_rows(GeneID, sep="\\|") %>% #splits multiple IDs on same row and keeps the left option
+  #separate_rows(GeneID, sep="\\.") %>% #splits multiple IDs on same row and keeps the left option
+  separate(GeneID, "ENSEMBL_ID", sep="\\.", remove=FALSE, extra="warn", fill="right") %>% #splits multiple IDs on same row and keeps the right "ENSEMBLID"
+  group_by(GeneID) %>%
+   arrange(FDR, .by_group=T) %>% #groups by Gene name and sorts them by FDR
+   top_n(-1, FDR) %>% # selects for each gene the one with lowest FDR
+   distinct()
+
+
+write.csv(GO_reference_list$ENSEMBL_ID, 
+          file="GO_reference_list.csv")
+
+```
+
+
+```{r}
+# Volcano Plot of results
+library(EnhancedVolcano)
+#library("biomaRt")
+#ensembl <- useMart("ensembl",dataset="hsapiens_gene_ensembl") #retrieves human database GRCh38.p13
+#ensembl_gene_names <- getBM(mart=ensembl, attributes = c("ensembl_gene_id", "external_gene_name"), filters = "chromosome_name", values=1:22)
+
+#ensembl_gene_names <- ensembl_gene_names %>%
+ #  rename(ENSEMBL_ID=ensembl_gene_id, Gene=external_gene_name)
+
+Volcano_list <- dplyr::select(res.df, GeneID= Feature, FDR="padj", Log2FoldChange="log2FoldChange" ) %>%
+   drop_na() %>%
+ #  separate_rows(GeneID, sep="\\|") %>% #splits multiple IDs on same row and keeps the left option
+  #separate_rows(GeneID, sep="\\.") %>% #splits multiple IDs on same row and keeps the left option
+  separate(GeneID, "ENSEMBL_ID", sep="\\.", remove=FALSE, extra="warn", fill="right") %>% #splits multiple IDs on same row and keeps the right "ENSEMBLID"
+  group_by(GeneID) %>%
+   arrange(FDR, .by_group=T) %>% #groups by Gene name and sorts them by FDR
+   top_n(-1, FDR) %>% # selects for each gene the one with lowest FDR
+   distinct()
+
+
+Volcano_list_genes <- Volcano_list %>%
+  separate(GeneID, c("delete","Gene"), sep="\\|", remove=FALSE, extra="drop", fill="right")%>% #splits multiple IDs on same row and keeps the right
+  dplyr::select(-delete)
+  
+Volcano_list_labels <- dplyr::filter(Volcano_list_genes, FDR<0.05)
+write.csv(as.data.frame(Volcano_list_labels), 
+          file="Significant_genes_results_0.05.csv")
+
+
+FC <- 0.5
+p <- 0.05
+
+keyvals <- rep('grey75', nrow(Volcano_list_genes))
+names(keyvals) <- rep('Not Significant', nrow(Volcano_list_genes))
+
+#keyvals[which(abs(Volcano_list$Log2FoldChange) > FC & Volcano_list$FDR > p)] <- 'grey50'
+#names(keyvals)[which(abs(Volcano_list$Log2FoldChange) > FC & Volcano_list$FDR > p)] <- 'Log2FoldChange'
+
+#keyvals[which(abs(Volcano_list$Log2FoldChange) < FC & Volcano_list$FDR < p)] <- 'grey25'
+#names(keyvals)[which(abs(Volcano_list$Log2FoldChange)  < FC & Volcano_list$FDR < p)] <- '-Log10Q'
+
+keyvals[which(Volcano_list_genes$Log2FoldChange < -FC & Volcano_list_genes$FDR < p)] <- 'blue2'
+names(keyvals)[which(Volcano_list_genes$Log2FoldChange  < -FC & Volcano_list_genes$FDR < p)] <- 'Down-regulated'
+
+keyvals[which(Volcano_list_genes$Log2FoldChange > FC & Volcano_list_genes$FDR < p)] <- 'red2'
+names(keyvals)[which(Volcano_list_genes$Log2FoldChange > FC & Volcano_list_genes$FDR < p)] <- 'Up-regulated'
+
+unique(keyvals)
+unique(names(keyvals))
+
+
+volcano_plot <- EnhancedVolcano(Volcano_list_genes,
+    lab = Volcano_list_genes$Gene,
+    x = 'Log2FoldChange',
+    y = 'FDR',
+    #selectLab = GBA_final_list$gene ,
+    #selectLab = c('ENSG00000153113','ENSG00000142192', 'ENSG00000168002', 'ENSG00000087460', 'ENSG00000148935', 'ENSG00000138162'), #for specific genes 
+    pCutoff = 0.05,
+    FCcutoff = 0.5,
+    xlim = c(-5.5, 5.5),
+    ylim = c(0, -log10(10e-12)),
+    colCustom = keyvals,
+    xlab = bquote(~Log[2]~ 'fold change'),
+    ylab = bquote(~-Log[10] ~ italic(Padj)),
+    pointSize = 2.5,
+    #labSize = 3.0,
+    #shape = c(6, 6, 19, 16),
+    title = "Expression pattern of tissues expressing less THRA1",
+    subtitle = "Differential Expression Analysis, High THRA1 expressing tissues as reference",
+    caption = "Fold Change cutoff = 0.5; Padj (FDR) cutoff = 0.05",
+    #legend=c('NS','Log (base 2) fold-change','P value', 'P value & Log (base 2) fold-change'),
+    #legend=c('','','P value', 'P value & Log (base 2) fold-change'),
+    legendPosition = "right",
+    legendLabSize = 15,
+    legendIconSize = 10,
+    col = c("grey30", "grey30", "royalblue", "red2"),
+    colAlpha = 0.8,
+    drawConnectors = TRUE,
+    widthConnectors = 0.6,
+    colConnectors = 'grey50',
+    boxedLabels=T,labSize =3)
+   # hline = c(10e-8), #adds cutoff lines
+
+volcano_plot
+
+
+ggsave("Volcano_plot.pdf", width = 40, height = 25, units = "cm")
+```
+
+
+
+
+
