@@ -1,0 +1,12 @@
+
+files_cell_lines_delete.txt
+GEO_GSE138734_metadata.numbers
+GEO_GSE138734_metadata.txt
+multiqc_report_reads.html
+multiqc_report_test.html
+multiqc_report_test_data.zip
+multiqc_report_test_data/multiqc.log
+multiqc_report_test_data/multiqc_data.json
+multiqc_report_test_data/multiqc_fastqc.txt
+multiqc_report_test_data/multiqc_general_stats.txt
+multiqc_report_test_data/multiqc_sources.txt
