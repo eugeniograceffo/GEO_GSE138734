@@ -9,8 +9,8 @@ output:
 
 INTRODUCTION to the Experiment
 
-	A total of 148 solid tissue samples representing 20 organs were taken from post-mortal human healthy donors killed in road accidents no later than 36 hours after death. Prior to RNA extraction solid normal tissue samples were stored either in RNAlater or as Formalin-Fixed Paraffin-Embedded (FFPE) blocks. Blood and bone marrow samples were taken from 6 and 11 healthy volunteers respectively and subjected immediately to RNA extraction. Following ribosomal RNA depletion and RNA libraries construction transcription profiles of the samples were obtained using Illumina HiSeq 3000.
-First-Stranded single-end reads. 50bp. Read counts of THRA exon 9a (Chr17:40089333) and exon 9b (Chr17:40089334)
+We applied three complementary RNA-seq methods on a heterogeneous collection of 300 human samples, including 45 tissues, 162 cell types, and 93 cell lines (cancer). From these samples, we generated strand-specific small RNA (298 samples), polyA (295 samples) and total RNA (296 samples) libraries that were sequenced at a median depth of 13 M, 60 M paired-end, and 125 M paired-end reads respectively, resulting in a total of 125 Billion reads.
+First-Stranded paired-end reads. 75bp x 2. Read counts of THRA exon 9a (Chr17:40089333) and exon 9b (Chr17:40089334)
 
 ```{r}
 #load libraries
@@ -29,16 +29,16 @@ library(dplyr)
 
 ```{r}
 ## set paths for output figure
-path_plots <- "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE120795/THRA_isoform_Expression_Coverage"
+path_plots <- "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE138734/THRA_isoform_Expression_Coverage"
 
 ## load metadata file
 
-metadata <- read.delim("metadata_GEO_GSE120795.txt", sep=",")
-metadata_tissues <- select(metadata, Run, "Sample" =source_name)
+metadata <- read.delim("GEO_GSE138734_metadata.txt", sep=",")
+metadata_filtered <- select(metadata, Run, "Sample" =source_name, sample_type, organ_system) 
 
 
 ##Load bedtools outputs
-file_links_bedtools <- list.files(path= "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE120795/bedtools_outputs" , pattern = "*.txt", full.names=T)
+file_links_bedtools <- list.files(path= "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE138734/bedtools_outputs" , pattern = "*.txt", full.names=T)
 
 
 # initialize an empty dataframe
@@ -66,13 +66,13 @@ for (x in file_links_bedtools) {
 #extract the SSR number and merge with the Sample name
 data_bedtools <- data_bedtools %>%
   separate("Run","Run", "_") %>%
-  left_join(metadata_tissues, by="Run")
+  left_join(metadata_filtered, by="Run")
 
 data_bedtools
 
 ##Load mosdepth outputs
 
-file_links_mosdepth <- list.files(path= "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE120795/mosdepth_outputs" , pattern = "*.bed", full.names=T)
+file_links_mosdepth <- list.files(path= "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE138734/mosdepth_outputs" , pattern = "*.bed", full.names=T)
 
 
 # initialize an empty dataframe
@@ -102,7 +102,7 @@ for (x in file_links_mosdepth) {
 #extract the SSR number and merge with the Sample name
 data_mosdepth <- data_mosdepth %>%
   separate("Run","Run", "_")%>%
-  left_join(metadata_tissues, by="Run")
+  left_join(metadata_filtered, by="Run")
 
 data_mosdepth
 
