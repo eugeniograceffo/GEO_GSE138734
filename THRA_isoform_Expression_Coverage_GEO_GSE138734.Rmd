@@ -53,10 +53,11 @@ for (x in file_links_bedtools) {
   table_sample <- read.delim(x, header = FALSE) ## read table
   basename_sample <- basename(x)
   table_sample <- mutate(table_sample, "Run"=basename_sample)
-  sum_column <- table_sample$V5
+  treshold_value <- filter(table_sample, V4 != "THRA") %>%
+    select(V5)
   
   # if statement to filter out samples that have 0 coverage in both exon 9a and 9b
-  if (sum(sum_column)  > 4) {
+  if (sum(treshold_value)  > 20) {
     data_bedtools <- bind_rows(data_bedtools, table_sample)
   }
     
@@ -92,7 +93,7 @@ for (x in file_links_mosdepth) {
  # treshold_value <- treshold_value$V5
   
   # if statement to filter out samples that have 0 coverage in both exon 9a and 9b
-  if (sum(treshold_value)  > 4) {  ## generally should be at least 4
+  if (sum(treshold_value)  > 20) {  ## generally should be at least 4
     data_mosdepth <- bind_rows(data_mosdepth, table_sample)
   }
     
@@ -112,14 +113,15 @@ data_mosdepth
 ## Let's rearrange the data in a useful way
 ## I will keep track of Run as the replicate identifier
 data_mosdepth <- data_mosdepth %>%
-  select(Sample, Run, Isoform = V4, Reads_count =V5) %>%
+  select(Sample, Run, sample_type, Isoform = V4, Reads_count =V5) %>%
   spread(key="Isoform", value="Reads_count") %>%
   mutate("Package" = as.factor("mosdepth")) 
 
 data_mosdepth
 
 data_bedtools <- data_bedtools %>%
-  select(Sample,Run, Isoform = V4, Reads_count =V5) %>%
+  select(Sample,Run,sample_type, Isoform = V4, Reads_count =V5) %>%
+  distinct() %>%
   spread(key="Isoform", value="Reads_count")%>%
   mutate("Package" = as.factor("bedtools")) %>%
   filter(Run %in% data_mosdepth$Run) ## makes sure we take only samples that were filtered already
@@ -173,6 +175,7 @@ dataset_final
 ```{r}
 ### Lets compare the read counts of exon 9a between the 2 tools
 graph_data_exon9a <- dataset_final %>%
+  filter(sample_type == "tissue") %>%
   select(Sample, Package, Read_counts_9a)
 
 
@@ -258,7 +261,7 @@ ggsave("Heatmap_THRA1vsA2_AUT_AUT_mosdepth.png" , device=png, dpi = 600, path = 
 
 ```{r}
 ### heatmap of percentages using mosdepth
-heatmap_data_mosdepth <- filter(dataset_final, Package == "mosdepth") %>%
+heatmap_data_mosdepth <- filter(dataset_final, Package == "mosdepth", sample_type == "tissue") %>%
   group_by(Sample, Package) %>%
   summarize(THRA1_Percentage=round(mean(THRA1_Percentage)))
 
@@ -278,7 +281,7 @@ ggplot(heatmap_data_mosdepth, aes(1, reorder(Sample,THRA1_Percentage), fill=THRA
 ```{r}
 ### Lets plot the percentage in a different way, so that the actual percentage is visible
 
-heatmap_data_percentage <- filter(dataset_final, Package == "mosdepth")%>%
+heatmap_data_percentage <- filter(dataset_final, Package == "mosdepth" , sample_type == "tissue")%>%
   group_by(Sample) %>%
   summarize(THRA1_Percentage=round(mean(THRA1_Percentage))) %>%
   mutate("THRA1_higher" = THRA1_Percentage >50 ) %>%
@@ -325,7 +328,7 @@ ggplot(heatmap_data_percentage, aes(x=Sample, y=delta_percentage, label=delta_pe
 
 ```{r}
 ### Lets add a graph where the replicates are visible
-heatmap_data_percentage_boxplot <- filter(dataset_final, Package == "mosdepth") %>%
+heatmap_data_percentage_boxplot <- filter(dataset_final, Package == "mosdepth", sample_type == "tissue") %>%
   select(Sample, THRA1_Percentage)  %>%
   group_by(Sample) %>%
   mutate(THRA1_Percentage_mean=round(mean(THRA1_Percentage))) %>%
