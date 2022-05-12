@@ -401,3 +401,79 @@ multiqc_report_alignment_data/multiqc_fastqc.txt
 multiqc_report_alignment_data/multiqc_picard_RnaSeqMetrics.txt
 multiqc_report_alignment_data/multiqc_sources.txt
 multiqc_report_alignment_data/multiqc_star.txt
+.DS_Store
+PCA_single_outputs/PCA_adipose tissue.png
+PCA_single_outputs/PCA_adrenal tissue.png
+PCA_single_outputs/PCA_Alveolar macrophage donor 4.png
+PCA_single_outputs/PCA_Alveolar macrophage donor 7.png
+PCA_single_outputs/PCA_Astrocyte-cerebellar.png
+PCA_single_outputs/PCA_Astrocyte-hippocampal.png
+PCA_single_outputs/PCA_Astrocyte-spinal cord.png
+PCA_single_outputs/PCA_Astrocyte.png
+PCA_single_outputs/PCA_Astrocytes-brain stem cel.png
+PCA_single_outputs/PCA_bladder tissue.png
+PCA_single_outputs/PCA_Brain cerebellum tissue.png
+PCA_single_outputs/PCA_Brain frontal cortex tissue.png
+PCA_single_outputs/PCA_Brain occipital cortex tissue.png
+PCA_single_outputs/PCA_Brain parietal cortex tissue.png
+PCA_single_outputs/PCA_Brain stem tissue.png
+PCA_single_outputs/PCA_Brain striatum tissue.png
+PCA_single_outputs/PCA_brain tissue.png
+PCA_single_outputs/PCA_Brain Vascular Adventitial Fibroblasts.png
+PCA_single_outputs/PCA_Brain Vascular Pericyte.png
+PCA_single_outputs/PCA_Brain Vascular Smooth Muscle Cell.png
+PCA_single_outputs/PCA_breast tissue.png
+PCA_single_outputs/PCA_CD14+ Monocytes.png
+PCA_single_outputs/PCA_CD19+ B-cells.png
+PCA_single_outputs/PCA_CD56+ NK cells.png
+PCA_single_outputs/PCA_cervix tissue.png
+PCA_single_outputs/PCA_Choroid Plexus Epithelial Cell.png
+PCA_single_outputs/PCA_Choroid Plexus Fibroblast.png
+PCA_single_outputs/PCA_colon tissue.png
+PCA_single_outputs/PCA_distal colon tissue.png
+PCA_single_outputs/PCA_duodenum tissue.png
+PCA_single_outputs/PCA_esophagus tissue.png
+PCA_single_outputs/PCA_fallopian tube tissue.png
+PCA_single_outputs/PCA_Fetal Brain tissue.png
+PCA_single_outputs/PCA_H1.png
+PCA_single_outputs/PCA_heart tissue.png
+PCA_single_outputs/PCA_HEK-293T.png
+PCA_single_outputs/PCA_ileum tissue.png
+PCA_single_outputs/PCA_Immature monocyte-derived dendritic cells.png
+PCA_single_outputs/PCA_jejunum tissue.png
+PCA_single_outputs/PCA_JY.png
+PCA_single_outputs/PCA_kidney tissue.png
+PCA_single_outputs/PCA_left atruim tissue.png
+PCA_single_outputs/PCA_left ventricle tissue.png
+PCA_single_outputs/PCA_liver tissue.png
+PCA_single_outputs/PCA_lung tissue.png
+PCA_single_outputs/PCA_lymph node tissue.png
+PCA_single_outputs/PCA_Mature monocyte-derived dendritic cells.png
+PCA_single_outputs/PCA_Meningeal Cell.png
+PCA_single_outputs/PCA_Monocytes.png
+PCA_single_outputs/PCA_Neuron.png
+PCA_single_outputs/PCA_NKL.png
+PCA_single_outputs/PCA_Oligodendrocyte Precursor Cell.png
+PCA_single_outputs/PCA_ovary tissue.png
+PCA_single_outputs/PCA_pancreas tissue.png
+PCA_single_outputs/PCA_pericardium tissue.png
+PCA_single_outputs/PCA_Perineurial Cell.png
+PCA_single_outputs/PCA_placenta tissue.png
+PCA_single_outputs/PCA_prostate tissue.png
+PCA_single_outputs/PCA_proximal colon tissue.png
+PCA_single_outputs/PCA_right atrium tissue.png
+PCA_single_outputs/PCA_right ventricle tissue.png
+PCA_single_outputs/PCA_Schwann Cell.png
+PCA_single_outputs/PCA_skeletal muscle tissue.png
+PCA_single_outputs/PCA_small intestine tissue.png
+PCA_single_outputs/PCA_spleen tissue.png
+PCA_single_outputs/PCA_stomach tissue.png
+PCA_single_outputs/PCA_testicle tissue.png
+PCA_single_outputs/PCA_thymus tissue.png
+PCA_single_outputs/PCA_thyroid tissue.png
+PCA_single_outputs/PCA_trachea tissue.png
+PCA_single_outputs/PCA_uterus tissue.png
+PCA_single_outputs/PCA_vena cava tissue.png
+PCA_single_outputs/PCA_YTS.png
+PCA_single_samples.png
+PCA_total.png

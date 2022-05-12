@@ -27,12 +27,22 @@ library("plotly")
 ### Load gene(/transcript) count matrix and labels
 
 countData <- as.matrix(read.csv("gene_count_matrix.csv", row.names="gene_id"))
-colData <- read.delim("metadata_GEO_GSE120795.txt", sep=",",row.names="Run")
-
-colData
+colData <- read.delim("GEO_GSE138734_metadata.txt", sep=",",row.names="Run")
 
 ### countData column names need to be edited. Only the Run number should be used as a name to match colData
-colnames(countData) = str_remove(colnames(countData), '_G.*')  ## the . is essential to disregard the next _ characters
+colnames(countData) <- str_remove(colnames(countData), '_G.*')  ## the . is essential to disregard the next _ characters
+
+
+### I need to remove the saamples on the metadata files that have been not used for the analysis
+filter_list <- dplyr::data_frame("Run"=colnames(countData))
+
+colData <- mutate(colData, "Run"=rownames(colData)) %>%
+  inner_join( filter_list, by="Run") %>%
+  distinct()
+
+rownames(colData) <- colData$Run
+
+colData
 
 
 ### Check all sample IDs in colData are also in CountData and match their orders
@@ -112,7 +122,7 @@ for (sample in pcaData$source_name ) {
   PCA_single %+% subset(pcaData, source_name %in% paste(sample))
   
   
-  ggsave(graph_title, width = 32, height = 20, units = "cm", path= "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE120795/PCA_single_outputs")
+  ggsave(graph_title, width = 32, height = 20, units = "cm", path= "~/OneDrive - Charité - Universitätsmedizin Berlin/Schuelke_Lab/EG15_RNA_Seq/GEO_GSE138734/PCA_single_outputs")
   
   
   }
