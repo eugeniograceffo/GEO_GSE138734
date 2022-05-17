@@ -334,7 +334,7 @@ heatmap_data_percentage_boxplot <- filter(dataset_final, Package == "mosdepth", 
   mutate(THRA1_Percentage_mean=round(mean(THRA1_Percentage))) %>%
   mutate("THRA1_higher" = THRA1_Percentage_mean >50 ) %>%
   mutate(replicates = sum(Sample == Sample)) %>%  ## counts the repicates (the n number)
-  mutate(labels = paste0(Sample, ", n=", replicates)) %>%
+  mutate(labels = paste0(str_remove(Sample," tissue") , ", n=", replicates)) %>%
   ungroup()
 
 heatmap_data_percentage_boxplot <- heatmap_data_percentage_boxplot[order(heatmap_data_percentage_boxplot$THRA1_Percentage_mean), ]  # sort
