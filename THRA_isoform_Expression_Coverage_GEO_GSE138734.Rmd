@@ -328,7 +328,7 @@ ggplot(heatmap_data_percentage, aes(x=Sample, y=delta_percentage, label=delta_pe
 
 ```{r}
 ### Lets add a graph where the replicates are visible
-heatmap_data_percentage_boxplot <- filter(dataset_final, Package == "mosdepth", sample_type == "tissue") %>%
+heatmap_data_percentage_boxplot <- filter(dataset_final, Package == "mosdepth", sample_type == "tissue", Read_counts_9a > 80) %>%
   select(Sample, THRA1_Percentage)  %>%
   group_by(Sample) %>%
   mutate(THRA1_Percentage_mean=round(mean(THRA1_Percentage))) %>%
@@ -351,12 +351,13 @@ ggplot(heatmap_data_percentage_boxplot, aes(x=reorder(labels, ID), y=THRA1_Perce
   scale_y_continuous("% THRA1" ,limits=c(0, 100))+ 
   geom_hline(yintercept=50, linetype="dashed", color = "black")+
   labs(subtitle="Percentage of THRA1 expression over the total of THRA", 
-       title= "THRA isoform expression pattern") + 
+       title= "THRA isoform expression pattern",
+       caption = "~15M uniquely mapped reads") + 
     theme(axis.title.y=element_blank()) +
   coord_flip()
 
 
-ggsave("THRA1vsA2_mosdepth_percentages_boxplot.png" , device=png, dpi = 600, path = path_plots, bg = "transparent", width = 20, height = 15, units = "cm" )
+ggsave("THRA1vsA2_mosdepth_percentages_boxplot_filtered.png" , device=png, dpi = 600, path = path_plots, bg = "transparent", width = 20, height = 15, units = "cm" )
 
 ```
 
